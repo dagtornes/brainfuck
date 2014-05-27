@@ -2,33 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bfscan.h"
+
 #define MAX_CELLS 30000
-
-int scan(int ip, int dir, char skip, char stop, const char *program, int limit)
-{
-    int start_ip = ip;
-    while (program[ip] != stop) {
-        ip += dir;
-        if (program[ip] == skip)
-            ip = scan(ip + dir, dir, skip, stop, program, limit) + dir;
-
-        if (ip == limit) {
-            printf("Mismatched %c at %d\n", stop, start_ip);
-            return -1;
-        }
-    }
-    return ip;
-}
-
-int scan_back(int ip, const char *program)
-{
-    return scan(ip, -1, ']', '[', program, -1);
-}
-
-int scan_fwd(int ip, const char *program, int program_length)
-{
-    return scan(ip, 1, '[', ']', program, program_length);
-}
 
 void test_program_back(const char *program, int start_ip, int expect_ip)
 {
@@ -50,7 +26,7 @@ void test_programs_back()
 
 void test_program_fwd(const char *program, int start_ip, int expect_ip)
 {
-    int found_ip = scan_fwd(start_ip, program, strlen(program));
+    int found_ip = scan_fwd(start_ip, program);
     if (found_ip == expect_ip) {
         printf("PASS\n");
     } else {
@@ -82,8 +58,6 @@ void print_args(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-    print_args(argc, argv);
-
     const char *program = NULL;
     if (argc == 3 && strcmp(argv[1], "-s") == 0) {
         program = argv[2];
@@ -131,7 +105,7 @@ int main(int argc, char *argv[])
             break;
         case '[':
             if (cells[cp] == 0) {
-                ip = scan_fwd(ip, program, program_length);
+                ip = scan_fwd(ip, program);
             } 
             break;
         case ']':

@@ -1,3 +1,5 @@
 brainfuck
+test_brainfuck
 
+*.o
 *.dSYM

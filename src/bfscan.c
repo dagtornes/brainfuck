@@ -10,7 +10,7 @@ int scan(int ip, int dir, char skip, char stop, const char *program, int limit)
             ip = scan(ip + dir, dir, skip, stop, program, limit) + dir;
 
         if (ip == limit) {
-            printf("Mismatched %c at %d\n", stop, start_ip);
+            // printf("Mismatched %c at %d\n", stop, start_ip);
             return -1;
         }
     }

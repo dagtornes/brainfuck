@@ -1,4 +1,4 @@
-CFLAGS=-Wall -g -std=c99 -Isrc/
+CFLAGS=-Wall -g -std=c99 -Isrc/ -MMD
 
 SRC=$(wildcard src/*.c)
 OBJ=$(patsubst src/%.c,obj/%.o,$(SRC))
@@ -25,6 +25,7 @@ $(TARGET): $(OBJ)
 $(TEST): LDFLAGS += -lcmocka
 $(TEST): $(TEST_OBJ) $(filter-out obj/$(TARGET).o, $(OBJ))
 	$(CC) -o $@ $^ $(LDFLAGS)
+	./$(TEST)
 
 clean:
 	rm -f $(TARGET)

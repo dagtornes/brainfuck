@@ -22,7 +22,7 @@ obj/%.o: src/%.c
 $(TARGET): $(OBJ)
 	$(CC) -o $@ $^
 
-$(TEST): LDFLAGS += -lcmocka
+$(TEST): LDFLAGS += -lcunit
 $(TEST): $(TEST_OBJ) $(filter-out obj/$(TARGET).o, $(OBJ))
 	$(CC) -o $@ $^ $(LDFLAGS)
 	./$(TEST)

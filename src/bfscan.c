@@ -3,7 +3,6 @@
 
 int scan(int ip, int dir, char skip, char stop, const char *program, int limit)
 {
-    int start_ip = ip;
     while (program[ip] != stop) {
         ip += dir;
         if (program[ip] == skip)

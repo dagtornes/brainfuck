@@ -1,45 +1,62 @@
-#include <stdarg.h>
-#include <stddef.h>
-#include <setjmp.h>
-#include <cmocka.h>
-
+#include <CUnit/Basic.h>
 #include "bfscan.h"
 
-void test_program_back(const char *program, int start_ip, int expect_ip)
+CU_pSuite make_util_suite();
+
+void test_programs_back()
 {
-    int found_ip = scan_back(start_ip, program);
-    assert_int_equal(found_ip, expect_ip);
+    CU_ASSERT_EQUAL(scan_back(1, "[]"), 0);
+    CU_ASSERT_EQUAL(scan_back(3, "[[]]"), 0);
+    CU_ASSERT_EQUAL(scan_back(2, "[[]]"), 1);
+    CU_ASSERT_EQUAL(scan_back(9, "[1[34]678]"), 0);
 }
 
-static void test_programs_back(void **state)
+void test_programs_fwd()
 {
-    test_program_back("[]", 1, 0);
-    test_program_back("[[]]", 3, 1);
-    test_program_back("[[]]", 2, 1);
-    test_program_back("[1[34]678]", 9, 0);
+    CU_ASSERT_EQUAL(scan_fwd(0, "[]"), 1);
+    CU_ASSERT_EQUAL(scan_fwd(0, "[[]]"), 3);
+    CU_ASSERT_EQUAL(scan_fwd(0, "[.]"), 2);
+    CU_ASSERT_EQUAL(scan_fwd(0, "[.[].]"), 5);
+    CU_ASSERT_EQUAL(scan_fwd(1, "[[]]"), 2);
 }
 
-void test_program_fwd(const char *program, int start_ip, int expect_ip)
+void test_programs_unbalanced()
 {
-    int found_ip = scan_fwd(start_ip, program);
-    assert_int_equal(found_ip, expect_ip);
+    CU_ASSERT_EQUAL(scan_fwd(0, "["), -1);
 }
 
-static void test_programs_fwd(void **state)
+CU_pSuite make_scan_suite()
 {
-    test_program_fwd("[]", 0, 1);
-    test_program_fwd("[[]]", 0, 3);
-    test_program_fwd("[.]", 0, 2);
-    test_program_fwd("[.[].]", 0, 5);
-    test_program_fwd("[[]]", 1, 2);
+    CU_pSuite suite = CU_add_suite("Scan suite", NULL, NULL);
+    if (suite != NULL) {
+        CU_add_test(suite, "test fwd scan", test_programs_fwd);
+        CU_add_test(suite, "test back scan", test_programs_back);
+        CU_add_test(suite, "test unbalanced scan", test_programs_unbalanced);
+    }
+    return suite;
 }
 
 int main(void)
 {
-    const UnitTest tests[] = {
-        unit_test(test_programs_fwd),
-        unit_test(test_programs_back),
-    };
+    if (CU_initialize_registry() != CUE_SUCCESS) {
+        return CU_get_error();
+    }
 
-    return run_tests(tests);
+    CU_pSuite scan_suite = make_scan_suite();
+    if (scan_suite == NULL) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
+    CU_pSuite util_suite = make_util_suite();
+    if (util_suite == NULL) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
+
+    CU_basic_set_mode(CU_BRM_NORMAL);
+    CU_basic_run_tests();
+    CU_cleanup_registry();
+    return CU_get_error();
 }

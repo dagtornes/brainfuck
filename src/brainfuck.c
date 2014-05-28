@@ -1,53 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
+#include "util.h"
 #include "bfscan.h"
 
 #define MAX_CELLS 30000
-
-void test_program_back(const char *program, int start_ip, int expect_ip)
-{
-    int found_ip = scan_back(start_ip, program);
-    if (found_ip == expect_ip) {
-        printf("PASS\n");
-    } else {
-        printf("FAIL Found ip = %d, expect_ip = %d\n", found_ip, expect_ip);
-    }
-}
-
-void test_programs_back()
-{
-    test_program_back("[]", 1, 0);
-    test_program_back("[[]]", 3, 0);
-    test_program_back("[[]]", 2, 1);
-    test_program_back("[1[34]678]", 9, 0);
-}
-
-void test_program_fwd(const char *program, int start_ip, int expect_ip)
-{
-    int found_ip = scan_fwd(start_ip, program);
-    if (found_ip == expect_ip) {
-        printf("PASS\n");
-    } else {
-        printf("FAIL Found ip = %d, expect_ip = %d\n", found_ip, expect_ip);
-    }
-}
-
-void test_programs_fwd()
-{
-    test_program_fwd("[]", 0, 1);
-    test_program_fwd("[[]]", 0, 3);
-    test_program_fwd("[.]", 0, 2);
-    test_program_fwd("[.[].]", 0, 5);
-    test_program_fwd("[[]]", 1, 2);
-}
-
-void test_programs()
-{
-    test_programs_fwd();
-    test_programs_back();
-}
 
 void print_args(int argc, char *argv[])
 {
@@ -56,13 +15,52 @@ void print_args(int argc, char *argv[])
     }
 }
 
+char *read_program(const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    fseek(file, 0, SEEK_END);
+    long fsize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *contents = malloc(fsize + 1);
+    fread(contents, fsize, 1, file);
+    fclose(file);
+
+    contents[fsize] = '\0';
+
+    return contents;
+}
+
+void print_prog(const char *program, int ip, int program_length)
+{
+    int from = ip - 5;
+    from = clamp(from, 0, program_length);
+    printf("\n)%.11s\n", program + from);
+    printf(")");
+    for (int i = 0; i < ip - from; i++) {
+        printf(" ");
+    }
+    printf("^\n");
+}
+
+void print_help()
+{
+    printf("Usage: \n");
+    printf("  ./brainfuck -s [program]\n");
+    printf("  ./brainfuck -f [file]\n");
+}
+
 int main(int argc, char *argv[])
 {
-    const char *program = NULL;
+    char *program = NULL;
+
     if (argc == 3 && strcmp(argv[1], "-s") == 0) {
-        program = argv[2];
+        program = strdup(argv[2]);
+    } else if (argc == 3 && strcmp(argv[1], "-f") == 0) {
+        program = read_program(argv[2]);
     } else {
-        program = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
+        print_help();
+        exit(-1);
     }
 
     char cells[MAX_CELLS];
@@ -79,6 +77,7 @@ int main(int argc, char *argv[])
             if (cp > 0) {
                 cp--;
             } else {
+                print_prog(program, ip, program_length);
                 printf("Tried to move cell-pointer beyond left edge\n");
             }
             break;
@@ -86,6 +85,7 @@ int main(int argc, char *argv[])
             if (cp < MAX_CELLS) {
                 cp++;
             } else {
+                print_prog(program, ip, program_length);
                 printf("Tried to move cell-pointer beyond right edge\n");
             }
             break;
@@ -120,6 +120,8 @@ int main(int argc, char *argv[])
     }
 
     printf("\n");
+
+    free(program);
 
     return 0;
 }

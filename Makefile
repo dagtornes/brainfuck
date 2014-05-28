@@ -1,10 +1,10 @@
-CFLAGS=-Wall -g
+CFLAGS=-Wall -g -std=c99 -Isrc/
 
-SRC=brainfuck.c bfscan.c
-OBJ=$(patsubst %.c,%.o,$(SRC))
+SRC=$(wildcard src/*.c)
+OBJ=$(patsubst src/%.c,obj/%.o,$(SRC))
 
-TEST_SRC=bfscan.c test_brainfuck.c
-TEST_OBJ=$(patsubst %.c,%.o,$(TEST_SRC))
+TEST_SRC=$(wildcard testsrc/*.c)
+TEST_OBJ=$(patsubst testsrc/%.c,obj/%.o,$(TEST_SRC))
 
 TARGET=brainfuck
 TEST=test_$(TARGET)
@@ -13,11 +13,20 @@ all: $(TARGET)
 
 test: $(TEST)
 
+obj/%.o: testsrc/%.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+obj/%.o: src/%.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
 $(TARGET): $(OBJ)
+	$(CC) -o $@ $^
 
 $(TEST): LDFLAGS += -lcmocka
-$(TEST): $(TEST_OBJ)
+$(TEST): $(TEST_OBJ) $(filter-out obj/$(TARGET).o, $(OBJ))
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -f $(TARGET) *.o
+	rm -f $(TARGET)
+	rm -f obj/*.o
 	rm -rf *.dSYM
